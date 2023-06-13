@@ -1,1 +1,2245 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <array>
+#include <utility>
+#include <iomanip>
+#include <cmath>
+#include <stdlib.h>
+#include <cstring>
+using namespace std;
+
+//Estellyn Hoo Weay
+// pause the system 
+void pause() 
+{
+    
+    // cout << "Press any key to continue..."<< endl;
+    // cin.ignore();
+    // cin.get();    
+
+    system("pause");
+}
+
+//------------- User Registration and Authentication------------------
+//Adrian Chong Keat Seong
+// Create a structure to allows multiple variables to be grouped together.
+struct User 
+{
+    string username;
+    string password;
+    int status;
+    int type;
+};
+
+//---------------------------------Save log-----------------------------------------------
+// Estellyn Hoo Weay
+//record the time when user log in 
+void savelogin(string username)
+{
+    ofstream log;
+    log.open("log.txt",ios_base::app);
+    time_t t= time(nullptr);
+    log << put_time(localtime(&t), "%c") <<"  "<< username << "  LOG IN" << endl;  
+    log.close();
+}
+
+//Estellyn Hoo Weay
+//record the time when user log out
+void savelogout(string username)
+{
+    ofstream log;
+    log.open("log.txt",ios_base::app);
+    time_t t= time(nullptr);
+    log << put_time(localtime(&t), "%c") <<"  "<< username << "  LOG OUT" << endl;  
+    log.close();
+}
+//----------------------------------------------------------------------------------
+
+//Adrian Chong Keat Seong
+//To get the user data from file and stored into a vector.
+vector<User> getusersdata() 
+{
+    
+    ifstream userFile;
+    userFile.open("userData.dat");
+    User userdata;
+    vector<User> users;
+
+    while (!userFile.eof())
+    {
+        userFile>>userdata.username;
+        userFile>>userdata.password;
+        userFile>>userdata.status;
+        userFile>>userdata.type;
+
+        if (userFile.good())
+            users.push_back(userdata);
+    }
+    
+    userFile.close();
+
+    return users;
+}
+
+// Adrian Chong Keat Seong
+// To check and compare the username and password key in by user is match with the data in the file.
+bool userAuthentication (string userName, string passWord, int option) 
+{
+    
+    vector<User> users = getusersdata();
+    bool found = false;
+
+    for (User userinf : users)
+    {
+        if (userName == userinf.username && passWord == userinf.password  && userinf.status == 0 && option == userinf.type) 
+        {
+            cout << "Successful Login" << endl;
+            found = true;
+            return true;
+        } 
+
+    }
+
+        if (!found) 
+        {
+            cout << "Invalid username or password " << endl;
+            return false;
+        }
+
+    return false;
+}
+
+// Adrian Chong Keat Seong
+// To check the option key in by user is valid or not
+void checkOption(int &option,string &username) 
+{
+
+    string password;
+    
+    while (option < 1 || option > 3) 
+    {
+
+        cout << "\nPlease enter the valid option. (1: User, 2: Admin, 3: Exit the program): ";
+        cin >> option;
+        cin.ignore(80,'\n');
+
+    };
+
+    if (option == 1 || option == 2) 
+    {
+        
+        do {
+            cout << "\nPlease key in your username and password." << endl << endl;
+            cout << "Username : ";
+            cin >> username;
+            cout << "\nPassword : ";
+            cin >> password;
+        } while (!userAuthentication(username,password,option));
+
+    } else 
+        if (option == 3) 
+        {
+            cout << "\nThank you for using this program, hope you have a nice day! \n" << endl;
+            exit(0);
+        }
+    pause();
+}
+
+// Adrian Chong Keat Seong
+// To count the password have an at least one capital letter or not
+int countCapLetters(char *strPtr) 
+{
+	int occurs = 0;
+
+	while (*strPtr != '\0')
+    {	
+		if ( isupper(*strPtr) )	    
+			occurs++;			
+
+		strPtr++;
+	}
+
+	return occurs;
+}
+
+// Adrian Chong Keat Seong
+// To point the digit for searching
+int countDigits(char *strPtr) 
+{
+	int occurs = 0;		
+
+	while (*strPtr != '\0')
+	{
+		if (isdigit(*strPtr))	
+			occurs++;	      	
+
+		strPtr++;
+	}
+   	return occurs;
+}
+
+// Adrian Chong Keat Seong
+// To check the password combination is include at least one capital letter and at least have one digit.
+bool checkPasswordCombination(char custPass[]) 
+{
+	
+    int numcapLetters, numDigits, length;
+    length = strlen(custPass);    
+	numcapLetters = countCapLetters(custPass);
+	numDigits = countDigits(custPass);
+
+    if (!isalpha(custPass[0]))
+        return false;
+
+	if (numcapLetters >= 1 && numDigits >= 1 && length >=5 && length <=20)
+		return true;
+	else
+		return false;
+
+}
+
+// Adrian Chong Keat Seong
+// Only admin can create an account for a user (whatever the user is admin)
+void createAccount() 
+{
+    
+    vector<User> users = getusersdata();
+    User newuser;
+    ofstream outfile;
+    outfile.open("userData.dat");
+    string newname;
+    char newpassword[21];
+    
+    cout << "Please input the username for the new account." << endl;
+    cout << "Username : ";
+    cin >> newname;
+    newuser.username = newname;
+
+    do 
+    {
+        cout << "\nEnter a password starts with letter and consisting of exactly at least one capital letters and at least one digits, but need to more than 5 characters and less than 20 characters) :" << endl;
+        cout << "Password : ";
+        cin >> newpassword;
+
+        if (checkPasswordCombination(newpassword)) 
+        {
+            cout << "Please wait - your password is being verified" << endl;
+            cout << "\nThe new account is created successfully." << endl;
+            newuser.password = newpassword;
+        }
+        else 
+        {
+            cout << "Invalid password. Please enter a at least 5 characters password starts with letter and with exactly at least one capital letter and 1 digits, not more than 20 character" << endl;
+        }
+
+    } while (!checkPasswordCombination(newpassword));
+
+    newuser.status= 0;
+    newuser.type = 1;
+
+    users.push_back(newuser);
+
+    for (User newdata : users) {
+        
+        outfile << newdata.username << " " << newdata.password << " " << newdata.status << " " << newdata.type << endl;
+    
+    }
+   
+    outfile.close();
+}
+
+// Adrian Chong Keat Seong
+// Only admin can delete the user account (whatever the user is admin)
+void deleteAccount() 
+{
+    
+    vector<User> users = getusersdata();
+    string username;
+
+    cout << "Please input the username for the one is needed to be deleted account." << endl;
+    cout << "Username : ";
+    cin >> username;
+
+    for (User &inf : users) {
+
+        if (username == inf.username) 
+        {
+            inf.status = 1;
+            cout << "\nThe account is deleted successfully." << endl;
+            break;
+        }
+
+    }
+
+    ofstream outfile;
+    outfile.open("userData.dat");
+
+    for (User data : users) 
+    {
+        outfile << data.username << " ";
+        outfile << data.password << " ";
+        outfile << data.status << " ";
+        outfile << data.type << endl;
+    }
+
+    outfile.close();
+}
+
+// Adrian Chong Keat Seong
+// To let user change his own password by key in new password
+void changepass(string username) 
+{
+    
+    vector<User> users = getusersdata();
+    string password;    
+    char newpassword[21];
+    bool check= false;
+
+    while(check == false) 
+    {
+        
+        cout << "Please enter your current password : ";
+        cin >> password;
+
+        for (User &data : users) 
+        {
+            
+            if (password == data.password && username == data.username) 
+            {
+                
+                check = true;
+                
+                do 
+                {
+                    
+                    cout << "\nPlease enter new password with at least five character starts with letter, at least one capital letter and digit, cannot more than 20 character " << endl;
+                    cout << "New password : ";
+                    cin >> newpassword;
+
+                    if (checkPasswordCombination(newpassword)) 
+                    {              
+                        cout << "Please wait - your password is being verified" << endl;
+                        cout << "\nThe new password is created successfully." << endl;
+                        data.password = newpassword;
+                    } 
+                    else 
+                        cout << "Invalid password."<< endl;
+                    
+
+                } while (!checkPasswordCombination(newpassword)); 
+                
+                break;
+            }  
+
+        }
+    }
+
+    ofstream outfile;
+    outfile.open("userData.dat");
+
+    for (User data : users) {
+        
+        outfile << data.username << " " << data.password << " " << data.status << " " << data.type << endl;
+    
+    }
+
+    outfile.close();   
+
+}
+
+// PAVITHRA
+//show the menu for admin with his or her name display
+void adminmenu (string username)
+{
+ 
+    system ("cls");
+
+
+    cout << "|________________________________________________________________________|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                              W E L C O M E                           *|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*";
+    cout << setw(38)<< username;
+    cout << setw(34)<<"*|"<<endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                                   T O                                *|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                      A D M I N  M A N A G E M E N T                  *|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                                M E N U                               *|" << endl;
+    cout << "|________________________________________________________________________|" << endl;
+    cout << "|________________________________________________________________________|" << endl;
+    cout << "|                Please choose any of the option below:                  |" << endl;
+    cout << "|                1) Create Account                                       |" << endl;
+    cout << "|                2) Delete Account                                       |" << endl;
+    cout << "|                3) Change Account Password                              |" << endl;
+    cout << "|                4) Quit                                                 |" << endl;
+    cout << "|________________________________________________________________________|" << endl;
+  
+ 
+}
+// PAVITHRA
+// read the choice from admin and run that function
+void adminuser (string username)
+{
+    char choice;
+    do
+    {
+        adminmenu(username);
+        cin>> choice;
+        switch (choice)
+        {
+            case '1':   createAccount();
+                        break;
+
+            case '2':   deleteAccount();
+                        break;
+
+            case '3':   changepass(username);
+                        break;
+
+            case '4':   savelogout(username);break;
+            
+            
+            default:    cout << "Invalid Input.Please try again." << endl;break;
+        }
+
+        pause();
+        
+    } while (choice != '4');
+  
+}
+
+//-----------------------------Load file-------------------------
+//Estellyn Hoo Weay
+// To ask user input the data file name 
+string loadfname()
+{
+    string name;
+    cout << endl;
+    cout << "Please take note that you need a specific format to load the file." << endl;
+    cout << "The first line of the file is number of columns." << endl;
+    cout << "The second line of the file is column titles." << endl;
+    cout << "The third line of the file is compute number(0&1)." << endl;
+    cout << "The fourth line of the file is number of rows." << endl;
+    cout << "The following lines of the file is data arranged with fixed columns and rows."<< endl;
+    cout << "\nPlease input the file name which you would like to load" <<endl;
+    cin >> name;
+    name.append(".txt");
+    cout << endl;
+    return name;
+}
+
+
+//Estellyn Hoo Weay
+//checking the third line of file format is correct or not, all "0" must be before "1" 
+//and also that line must be "1" and "0" only 
+bool checking(vector<string>compnum, int col)
+{
+    for (int i=col-1; i>0 ; i--)
+    {
+        if (compnum[i] =="0" && compnum[i-1] =="1")
+        {
+            cout << "Error Reading File" << endl;
+            return false;
+        }
+        if (compnum[i] != "0" && compnum[i] != "1")
+        {
+            cout << "Error Reading File" << endl; 
+            return false;
+        }            
+    }
+    return true;
+}
+
+//Estellyn Hoo Weay
+//Checking file reading format is correcl or no and then get number of rows and columns 
+bool getColRow(int &row, int &col,string name)
+{
+    ifstream file;
+    file.open(name);
+    string line;
+    bool flag = true;
+    
+    if ( !file.is_open() )
+    {
+        cout << "Error Opening File" << endl;
+        return false;
+    }
+    else if ( !(file >> col)  ) 
+    {
+        cout << "Error Reading File" << endl;
+        return false; 
+    }
+
+    for (int i=0; i<col ;i++)
+    {
+        file >> line;
+        if (isdigit(line[0]))
+        {   cout << "Error Reading File" << endl;
+            return false; 
+        }
+    }
+    vector<string>compnum(col);
+    for (int i=0; i<col ; i++)
+    {
+        file >> line;
+        compnum[i]=line;
+        if (!isdigit(line[0]))
+        {   cout << "Error Reading File" << endl;
+            return false; 
+        }
+    }
+    flag = checking(compnum,col);
+
+        
+    if ( !(file >> row)  ) 
+    {
+        cout << "Error Reading File" << endl;
+        return false; 
+    }   
+
+    file.close();
+    return flag;
+
+}
+
+//Estellyn Hoo Weay
+//To get data from file and stored into the array
+void getData(int **arr, int rows, int cols, string name)
+{
+
+    ifstream file;
+    file.open(name);
+    string x;
+    for (int i = 0; i < 4; i++)
+        getline(file,x);
+
+
+    int i = 0;
+    int k;
+    vector<int> data;
+    while(!file.eof())
+        {
+            file>> k;
+            data.push_back(k);
+        }
+    int n=0;
+
+    while (i<rows)
+    {
+        for (int j=0; j<cols; j++)
+        {
+            arr[i][j] = data[n];
+            n++;            
+        }
+        i++;
+    }
+    file.close(); 
+}
+
+
+//Estellyn Hoo Weay
+//To get name of title from file and stored into a vector<string>
+vector <string> titles (int cols,string name)
+{
+    ifstream file;
+    file.open(name);
+    // throw first line
+    int x;
+    file>>x;
+    // get the all title names
+    string y;
+    vector <string> t;
+
+    for(int i=0; i<cols ;i++)
+    {
+    file >> y;    
+    t.push_back(y);  
+    }
+    file.close();
+
+    return t;
+}
+
+//Estellyn Hoo Weay
+//To match relationship of the computing number and title from the file 
+//stored them into a pair vector
+vector <pair<string,int>> Titles_Computing (int cols,string name)
+{
+    ifstream file;
+    file.open(name);
+    //throw away first line
+    int x;
+    file>>x;
+
+    string y;
+    vector <string> t;
+
+    for(int i=0; i<cols ;i++)
+    {
+        file >> y;    
+        t.push_back(y);  
+    }
+
+    int c;
+    // vector<int> = {0,1,1,1,1}
+    // 0 is meaning that column cannot be computed but 1 can
+    vector <int> comp;
+    for (int j=0; j<cols ;j++)
+    {
+        file >> c;
+        comp.push_back(c);
+    }
+
+    //link the relationship between title and compute number
+    vector<pair<string,int>> TC ;
+    for (int z=0 ; z<cols ; z++)
+    {
+        TC.push_back( {t[z],comp[z]});
+    }
+    file.close();
+
+    return TC;
+
+}
+
+
+//Estellyn Hoo Weay
+//To read user choosen column which can be computed
+// if that column cannot be computed, user will be asked to input again
+string gettitles(int cols,string name)
+{
+    vector <string> t;
+    t = titles(cols, name);
+    vector<pair<string,int>> TC ;
+    TC = Titles_Computing (cols,name);
+
+    string titles;
+    bool flag = false;
+    
+  
+     while (flag == 0)
+     {
+         cout << "\nPlease select the titles which are shown below " <<endl;
+         for (int z=0 ; z<cols ; z++)
+            cout << t[z] << "  ";
+         cout << endl << endl;
+         cin >> titles;
+           
+         for (int w=0 ; w<cols ; w++)
+         {
+                 if (titles == TC[w].first)
+                 {   
+                     switch (TC[w].second)
+                     {   
+                         case 1 : cout << "Sucess Select." << endl; flag = 1;break;
+                         case 0 : cout << "Sorry it cannot be computed."<< endl;flag = 0; break;
+                     }
+                     break;
+                 }
+         } 
+         if (flag == 0) cout << "Invalid Input. Please Try Again" <<endl<<endl;             
+    }
+
+    return titles;       
+}
+
+//Estellyn Hoo Weay
+//To match the titles with the number of columns
+//If user select second titles , int c will return 1(which means second column)
+int counting_col (int cols,string name)
+{
+    vector <string> t;
+    t = titles(cols,name);
+    int c;
+    string selectedtitles;
+    selectedtitles = gettitles(cols,name);
+ 
+    //For example: vector<pair<string,int>> = {(Id,0),(age,1),(math,2).........}
+    vector<pair<string,int>> titles_cols ;
+    for (int n=0 ; n<cols ; n++)
+    {
+        titles_cols.push_back( {t[n], n});
+    }
+    for (int i=0; i<cols ; i++)
+    {
+        if (selectedtitles == titles_cols[i].first)
+        {
+            c = titles_cols[i].second; break;
+        }    
+        
+    }
+    return c;
+
+}
+
+//Estellyn Hoo Weay
+//To read which columns can be computed
+int forcompleterow (int cols, string name)
+{
+    ifstream file;
+    file.open(name);
+    int x , allc,c;
+    // throw away the first 2 line data
+    file>>x;
+    string y;
+    for (int i=0 ; i<cols ; i++)
+        file >> y;
+    
+    // vector<int> = {0,1,1,1,1}
+    vector <int> comp;
+    for (int j=0; j<cols ;j++)
+    {
+        file >> c;
+        comp.push_back(c);
+    }
+    //link the relationship column and compute number
+    vector <pair<int,int>> computecols;
+    for (int i=0; i<cols ; i++)
+    {
+        computecols.push_back({comp[i],i});
+    }
+    //For example, if the compute number line is 0 1 1 1 1 1,
+    //if system detects second column is the first column which pairs with 1, means that it can be computed, it will return 1(second column)
+    for (int n=0; n<cols ; n++)
+    {
+        if (computecols[n].first == 1)
+        {allc = computecols[n].second; break;}
+
+    }
+    return allc;
+
+}
+
+//Estellyn Hoo Weay
+//To read and get the name of titles which user select
+string getselectedtitles (int cols, int c,string name)
+{
+    string titlesname;
+    vector <string> t;
+    t = titles(cols,name);
+    // link the relationship between title and columns number
+    vector<pair<string,int>> titles_cols ;
+    for (int n=0 ; n<cols ; n++)
+    {
+        titles_cols.push_back( {t[n], n});
+    }
+
+    // for example : there is  math,malay,english
+    // system read 0
+    // titlename will be return math
+    for (int i=0; i<cols ; i++)
+    {
+
+        if (c == titles_cols[i].second)
+            titlesname = titles_cols[i].first;
+        
+    }
+
+    return titlesname;
+}
+
+
+//Estellyn Hoo Weay
+// allocates an array with row rows and col columns
+int **allocateArray(int row, int col)
+{
+    int **arr;
+    arr = new int*[row];
+    for (int i=0; i<row; i++)   
+        arr[i] = new int[col];
+    return arr;
+}
+//Estellyn Hoo Weay
+//To free dynamic array to prevent memory leaks
+void freeArray(int **arr, int row)
+{
+    for (int i=0; i<row; i++)   
+        delete[] arr[i];
+    delete[] arr;
+}
+
+// PAVITHRA
+//Asking user to continue select another title , if user press y function will return 1 else function will return 0
+bool checkingrecord()
+{
+    char choice;
+    
+    do
+    {
+        cout << "\nDo you want to record other data?" <<endl;
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y')
+        return true;
+
+    else
+        return false;
+}
+
+//Estellyn Hoo Weay
+//record the transaction and title  selected by user into log file
+void savelog(string transaction, string selecttitle)
+{
+    ofstream log;
+    log.open("log.txt",ios_base::app);
+    time_t t= time(nullptr);
+    log << put_time(localtime(&t), "%c")  <<" "<< transaction <<" "<< selecttitle << endl;  
+    log.close();
+}
+//Estellyn Hoo Weay
+//record the correlation and title selected by user into log file
+void savelog(string transaction, string selecttitle1,string selecttitle2)
+{
+    ofstream log;
+    log.open("log.txt",ios_base::app);
+    time_t t= time(nullptr);
+    log << put_time(localtime(&t), "%c")  <<" "<< transaction <<" "<< selecttitle1 <<" and "<<selecttitle2 << endl;  
+    log.close();
+}
+
+//--------------------------------MAX------------------------------------------
+//SOON TEE HERR
+//Return the maximum value for the specific column (without output into file)
+int max(int **arr, int c, int rows)
+{
+   int max = 0;
+
+   for (int i = 0; i < rows; i++)
+      {
+         if(max < arr[i][c])    
+         max = arr[i][c];
+      }
+      return max;
+}
+//SOON TEE HERR
+//Output the maximum value for the all columns (with output into file) 
+void comp_max(int **arr,int allc ,int col, int rows,string name)
+{
+    ofstream ofile;
+    ofile.open("comp_max.txt");
+    string selecttitle;
+    string transaction= "Maximum";
+    int MAX;
+
+    for (int i = allc; i < rows; i++)
+    {
+        selecttitle = getselectedtitles (col, i, name);
+        cout << selecttitle << "  ";
+    }
+    cout << endl;
+
+
+    for (int j = allc; j<col; j++)
+    {
+      MAX = max(arr, j, rows);
+      selecttitle = getselectedtitles (col, j, name);
+      savelog(transaction, selecttitle);
+
+      cout << MAX << "  ";
+      ofile << " " << MAX ;     
+    }
+    cout << endl;
+    ofile.close();
+}
+//SOON TEE HERR
+//Output the maximum value for the specific column and stord into file
+void storedmax(int **arr, int rows, int col,string name)
+{
+    ofstream ofile;
+    ofile.open("rptmax.txt");
+    string transaction = "Maximum";
+    int c,MAX;
+    string titlesname;
+    bool flag = true;
+
+    while (flag == true)
+    {
+        c = counting_col(col,name); 
+        MAX = max(arr, c, rows);
+        titlesname = getselectedtitles (col, c, name);
+
+        ofile << " " <<transaction <<" "<< titlesname <<" " << MAX;
+
+        cout <<  "The maximum  of "<< titlesname << " is " << MAX <<endl;
+
+        flag = checkingrecord();
+
+    }
+
+    ofile.close();
+
+}
+
+//-------------------Minimum-----------------
+//SOON TEE HERR
+//Return the minimum value for the specific column (without output into file)
+int min(int **arr, int c, int rows)
+{
+   int min = arr[0][c];
+
+   for (int i = 0; i < rows; i++)
+      {
+         if(min > arr[i][c])    
+         min = arr[i][c];
+      }
+      return min;
+}
+//SOON TEE HERR
+//Output the minimum value for the all columns (with output into file) 
+void comp_min(int **arr, int allc, int col, int rows, string name)
+{
+    ofstream ofile;
+    ofile.open("comp_min.txt");
+    string selecttitle;
+    string transaction= "Minimum";
+    int MIN;
+
+    for (int i = allc; i < rows; i++)
+    {
+        selecttitle = getselectedtitles (col, i, name);
+        cout << selecttitle << "  ";
+    }
+    cout << endl;
+
+
+    for (int j = allc; j<col; j++)
+    {
+      MIN = min(arr, j, rows);
+      selecttitle = getselectedtitles (col, j, name);
+      savelog(transaction, selecttitle);
+
+      cout << MIN << "  ";
+      ofile << " " << MIN ;     
+    }
+    cout << endl;
+    ofile.close();
+}
+//SOON TEE HERR
+//Output the minimum value for the specific column and stord into file
+void storedmin(int **arr, int rows, int col, string name)
+{
+    ofstream ofile;
+    ofile.open("rptmin.txt");
+    string transaction = "Minimum";
+    int c,MIN;
+    string titlesname;
+    bool flag = true;
+
+    while (flag == true)
+    {
+        c = counting_col(col,name); 
+        MIN = min(arr, c, rows);
+        titlesname = getselectedtitles (col, c, name);
+
+        ofile << " " <<transaction <<" "<< titlesname <<" " << MIN;
+
+        cout <<  "The minimum  of "<< titlesname << " is " << MIN <<endl;
+
+        flag = checkingrecord();
+
+    };
+
+    ofile.close();
+
+}
+
+//-------------------------------MEDIAN---------------------------------------
+//SOON TEE HERR
+//Return the median value for the specific column (without output into file)
+float mid(int **arr, int c, int rows)
+{
+    bool swap;
+	float temp;
+	int bottom = rows - 1;	
+    float median;
+	do{
+		swap = false;
+		for (int i = 0; i < bottom; i++)
+		{
+			if (arr[i][c] > arr[i + 1][c])
+			{		
+				temp = arr[i][c];
+				arr[i][c] = arr[i + 1][c];
+				arr[i + 1][c] = temp;
+
+				swap = true; 
+			}
+		}
+		bottom--;	
+	} while (swap != false);
+    
+    if(rows % 2 != 0)
+        median = arr[rows/2][c];
+        
+        else
+            median = (arr[(rows - 1)/2][c]) + (arr[rows/2][c])/2;
+
+    return median;
+
+}
+
+//SOON TEE HERR
+//Output the median value for the all columns (with output into file) 
+void comp_mid(int **arr,int allc ,int col, int rows,string name)
+{
+    ofstream ofile;
+    ofile.open("comp_mid.txt");
+    string selecttitle;
+    string transaction= "Median";
+    int MEDIAN;
+
+    for (int i = allc; i < rows; i++)
+    {
+        selecttitle = getselectedtitles (col, i, name);
+        cout << selecttitle << "  ";
+    }
+    cout << endl;
+
+
+    for (int j = allc; j<col; j++)
+    {
+        MEDIAN = mid(arr, j, rows);
+        selecttitle = getselectedtitles (col, j, name);
+        savelog(transaction, selecttitle);
+
+        cout << MEDIAN << "  ";
+        ofile << "  " << MEDIAN ;     
+    }
+    cout << endl;
+    ofile.close();
+}
+//SOON TEE HERR
+//Output the median value for the specific column and stord into file
+void storedmid(int **arr, int rows, int col,string name)
+{
+    ofstream ofile;
+    ofile.open("rptmid.txt");
+    string transaction = "Median";
+    int c,MEDIAN;
+    string titlesname;
+    bool flag = true;
+
+    while (flag == true)
+    {
+        c = counting_col(col,name); 
+        MEDIAN = mid(arr, c, rows);
+        titlesname = getselectedtitles (col, c, name);
+
+        ofile << " " <<transaction <<" "<< titlesname <<" " << MEDIAN;
+
+        cout <<  "The median  of "<< titlesname << " is " << MEDIAN <<endl;
+
+        flag = checkingrecord();
+
+    }
+
+    ofile.close();
+
+}
+
+//-------------------------------MEAN---------------------------------------
+//SOON TEE HERR
+//Return the mean value for the specific column (without output into file)
+float mean(int **arr, int c, int rows)
+{
+   int sum = 0;
+
+   for (int i = 0; i < rows; i++)
+      {
+         sum += arr[i][c];
+      }
+      return sum/rows;
+}
+//SOON TEE HERR
+//Output the mean value for the all columns (with output into file) 
+void comp_mean(int **arr,int allc ,int col, int rows,string name)
+{
+    ofstream ofile;
+    ofile.open("comp_mean.txt");
+    string selecttitle;
+    string transaction= "Mean";
+    float MEAN;
+
+    for (int i = allc; i < rows; i++)
+    {
+        selecttitle = getselectedtitles (col, i, name);
+        cout << selecttitle << "  ";
+    }
+    cout << endl;
+
+
+    for (int j = allc; j<col; j++)
+    {
+      MEAN = mean(arr, j, rows);
+      selecttitle = getselectedtitles (col, j, name);
+      savelog(transaction, selecttitle);
+
+      cout << MEAN << fixed << showpoint << setprecision(1) << "   ";
+      ofile << " " << MEAN ;     
+    }
+    cout << endl;
+    ofile.close();
+}
+//SOON TEE HERR
+//Output the mean value for the specific column and stord into file
+void storedmean(int **arr, int rows, int col,string name)
+{
+    ofstream ofile;
+    ofile.open("rptmean.txt");
+    string transaction = "Mean";
+    int c;
+    float MEAN;
+    string titlesname;
+    bool flag = true;
+
+    while (flag == true)
+    {
+        c = counting_col(col,name); 
+        MEAN = mean(arr, c, rows);
+        titlesname = getselectedtitles (col, c, name);
+
+        ofile << " " <<transaction <<" "<< titlesname <<" " << fixed << showpoint << setprecision(1) << MEAN;
+
+        cout <<  "The mean  of "<< titlesname << " is " << fixed << showpoint << setprecision(1) << MEAN <<endl;
+
+        flag = checkingrecord();
+
+    }
+
+    ofile.close();
+
+}
+//-------------------------------VARIANCE---------------------------------------
+//SOON TEE HERR
+//Return the variance value for the specific column (without output into file)
+float var(int **arr, int c, int rows)
+{
+    float sum = 0;
+    float average = mean(arr, c, rows);
+    float temp, variance;
+   for (int i = 0; i < rows; i++)
+      {
+        temp = (arr[i][c] - average)*(arr[i][c] - average);
+        sum += temp;
+      }
+      variance = sum/(rows - 1);
+      return variance;
+}
+//SOON TEE HERR
+//Output the variance value for the all columns (with output into file) 
+void comp_var(int **arr,int allc ,int col, int rows,string name)
+{
+    ofstream ofile;
+    ofile.open("comp_var.txt");
+    string selecttitle;
+    string transaction= "Variance";
+    float VARIANCE;
+
+    for (int i = allc; i < rows; i++)
+    {
+        selecttitle = getselectedtitles (col, i, name);
+        cout << selecttitle << "  ";
+    }
+    cout << endl;
+
+
+    for (int j = allc; j<col; j++)
+    {
+      VARIANCE = var(arr, j, rows);
+      selecttitle = getselectedtitles (col, j, name);
+      savelog(transaction, selecttitle);
+
+      cout << fixed << showpoint << setprecision(1) << VARIANCE << "   ";
+      ofile << fixed << showpoint << setprecision(1) << " " << VARIANCE ;     
+    }
+    cout << endl;
+    ofile.close();
+}
+//SOON TEE HERR
+//Output the variance value for the specific column and stord into file
+void storedvar(int **arr, int rows, int col,string name)
+{
+    ofstream ofile;
+    ofile.open("rptvar.txt");
+    string transaction = "Variance";
+    int c;
+    float VARIANCE;
+    string titlesname;
+    bool flag = true;
+
+    while (flag == true)
+    {
+        c = counting_col(col,name); 
+        VARIANCE = var(arr, c, rows);
+        titlesname = getselectedtitles (col, c, name);
+
+        ofile <<" "<<transaction <<" "<< titlesname <<" "<< fixed << showpoint << setprecision(1) <<VARIANCE;
+
+        cout <<  "The variance  of " << titlesname << " is " << fixed << showpoint << setprecision(1) << VARIANCE <<endl;
+
+        flag = checkingrecord();
+
+    }
+
+    ofile.close();
+
+}
+
+//-------------------------------STDV---------------------------------------
+//SOON TEE HERR
+//Return the standard deviation value for the specific column (without output into file)
+float stdv(int **arr, int c, int rows)
+{
+    float variance = var(arr, c, rows);
+    return sqrt(variance);
+}
+
+//Output the standard deviation value for the all columns (with output into file) 
+void comp_stdv(int **arr,int allc ,int col, int rows,string name)
+{
+    ofstream ofile;
+    ofile.open("comp_stdv.txt");
+    string selecttitle;
+    string transaction= "Standard_Deviation";
+    float STDV;
+    
+
+    for (int i = allc; i < rows; i++)
+    {
+        selecttitle = getselectedtitles (col, i, name);
+        cout << selecttitle << "  ";
+    }
+    cout << endl;
+
+
+    for (int j = allc; j<col; j++)
+    {
+      STDV = stdv(arr, j, rows);
+      selecttitle = getselectedtitles (col, j, name);
+      savelog(transaction, selecttitle);
+
+      cout << fixed << showpoint << setprecision(1) <<STDV << "   ";
+      ofile << fixed << showpoint << setprecision(1) << " " << STDV ;     
+    }
+    
+    cout << endl;
+    ofile.close();
+}
+//SOON TEE HERR
+//Output the standard deviation value for the specific column and stord into file
+void storedstdv(int **arr, int rows, int col,string name)
+{
+    ofstream ofile;
+    ofile.open("rptSTDV.txt");
+    string transaction = "Standard_Deviation";
+    int c;
+    float STDV;
+    string titlesname;
+    bool flag = true;
+
+    while (flag == true)
+    {
+        c = counting_col(col,name); 
+        STDV = stdv(arr, c, rows);
+        titlesname = getselectedtitles (col, c, name);
+
+        ofile << " " <<transaction <<" "<< titlesname <<" " << fixed << showpoint << setprecision(1) << STDV;
+
+        cout <<  "The standard deviation  of "<< titlesname << " is " << fixed << showpoint << setprecision(1) << STDV <<endl;
+
+        flag = checkingrecord();
+
+    }
+
+    ofile.close();
+
+}
+//-------------------correlation--------------------
+//SOON TEE HERR
+//Return the value of correlation between any selected 2 columns(without output into file)
+float correlation(int **arr, int c1, int c2, int rows)
+{
+    float expression1, expression2, expression3, expression4, mean1, mean2, correlation;
+
+    expression1 = 0;
+
+    for(int i=0; i < rows; i++)
+    {
+        expression1 += arr[i][c1] * arr[i][c2]; 
+    }
+
+    mean1 = mean(arr, c1, rows);
+    mean2 = mean(arr, c2, rows);
+    expression2 = 3*mean1*mean2;
+
+    expression3 = 0;
+    for(int i=0; i < rows; i++)
+    {
+        expression3 += arr[i][c1]; 
+    }
+
+    expression4 = 0;
+    for(int i=0; i < rows; i++)
+    {
+        expression4 += arr[i][c2]; 
+    }
+
+    correlation = (expression1-expression2) / ( ( sqrt(pow(expression3, 2)-(3*pow(mean1, 2))) ) * ( sqrt(pow(expression4, 2)-(3*pow(mean2, 2))) ) );
+    return correlation;
+}
+//SOON TEE HERR
+//Output the correlation value for the specific column and stord into file
+void storedcorrelation (int **arr,int rows,int col,string name)
+{
+    ofstream ofile;
+    ofile.open("rptcorrelation.txt");
+    bool flag = true;
+    string transaction = "Correlation";
+    string titlename1,titlename2;
+    float Correlation;
+    int c1,c2;
+
+    while (flag == true)
+    {
+        cout << "\nPlease select any two titles\n" << endl;
+        cout << "For the first title\n";
+        c1 = counting_col(col,name);
+        cout << "\nFor the second title\n";
+        c2 = counting_col(col,name);
+        titlename1 = getselectedtitles (col, c1, name);
+        titlename2 = getselectedtitles (col, c2, name);
+        Correlation = correlation(arr,c1,c2,rows);
+
+        ofile << " " <<transaction <<" "<< titlename1 << " "<< titlename2 <<" " << Correlation;
+        savelog(transaction,titlename1,titlename2);
+
+        cout << fixed << showpoint << setprecision(3)<< "The correlation  between "<< titlename1 << " and ";
+        cout << titlename2 << " is " << Correlation <<endl;        
+
+        flag = checkingrecord();
+    }
+    ofile.close();
+}
+
+//SOON TEE HERR
+//sort the output data for next step of distinct data
+void bubblesort(float array[], int size)
+{
+    bool swap;
+	float temp;
+	int bottom = size - 1;	
+	do{
+		swap = false;
+		for (int i = 0; i < bottom; i++)
+		{
+			if (array[i] > array[i + 1])
+			{		
+				temp = array[i];
+				array[i] = array[i + 1];
+				array[i + 1] = temp;
+
+				swap = true; 
+			}
+		}
+		bottom--;	
+	} while (swap != false);
+}
+//SOON TEE HERR
+//Store the distinct data from any chosen data type and
+//return the vector in pair of distinct data members (without any title)
+vector<pair<float, int>> disdata(string txt)
+{
+    float data = 0;
+    float *temp = new float;
+    int frq = 0;
+    ifstream file;
+    file.open(txt);
+    int size=0;
+    float readdata;
+    while (!file.eof())
+    {
+        file >> readdata;
+        temp[size] = readdata;
+        size++;
+    }
+
+
+
+	file.close();
+	
+    bubblesort(temp, size);
+    vector<pair<float, int>> r;
+  
+	int count = 0;
+	while(count < size){
+		data = temp[count];
+	
+		while(data == temp[count])
+        {
+            frq++;
+            count++;
+		}
+		r.push_back({data, frq});
+		frq = 0;
+	}
+
+    delete temp;
+	
+
+    return r;
+
+}
+//SOON TEE HERR
+//Output the table of distinct data with title and line
+void disdata_table(vector<pair<float,int>> r)
+{
+
+    cout << "+-------------------+---------------------+" << endl;
+    cout << "|Distinct Number    |Frequency            |" << endl;
+    cout << "+-------------------+---------------------+" << endl;
+    
+    for(int i=0; i< r.size(); i++)
+    {
+        cout << "|" << setw(19) << left << r[i].first << "|" << setw(21) << left << r[i].second << "|" << endl;
+    }
+
+    cout << "+-------------------+---------------------+" << endl;
+}
+
+
+//SOON TEE HERR
+//Output the histogram from distinct data
+void histogram(string txt, string headername)
+{
+    vector<pair<float, int>> r = disdata(txt);
+    disdata_table(r);
+    
+	
+	cout << left << setw(18) << "Counts" << headername << endl; 
+
+	for(int i = 0; i < r.size(); i++){
+	cout << left << setw(12) << r[i].second 
+		 << right << setw(8) << r[i].first;
+	cout << "|";
+
+	for(int j = 0; j < r[i].second; j++){
+	cout << "=";
+		}
+	cout << endl;
+	}
+	
+	cout << right << setw(19) << " " << "/+---------+---------+---------+---------+---------+" << endl;
+	cout << right << setw(21) << "0";
+
+	for (int n=10 ; n <= 50; n=n+10){
+	cout << right << setw(10) << n; 
+	}
+	cout << endl;
+}
+
+
+
+
+
+//--------------------------------------------------------------
+// PAVITHRA
+//Caller function for computation minimum
+void readmin(int**arr,int rows,int col,string name)
+{
+    int allc = forcompleterow (col, name);
+
+    comp_min(arr, allc , col, rows, name);
+    storedmin(arr, rows, col, name);
+    
+
+    string txt="comp_min.txt";
+    string headern="Minimum";
+    char choice;
+
+    cout << "\nDo you want to show analysed results in histogram form?" << endl;
+    do 
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y') 
+        histogram (txt,headern);
+
+}
+// PAVITHRA
+//Caller function for computation maximum
+void readmax(int **arr,int rows,int col,string name)
+{
+    int allc = forcompleterow (col, name);
+    comp_max(arr, allc , col, rows, name);
+
+    storedmax(arr, rows, col, name);
+
+    string txt="comp_max.txt"; 
+    string headern="Maximum";
+    char choice;
+
+    cout << "\nDo you want to show analysed results in histogram form?" << endl;
+    do 
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y') 
+    {
+        histogram (txt,headern);  
+    }
+
+}
+// PAVITHRA
+//Caller function for computation median
+void readmedian(int **arr,int rows ,int col, string name)
+{
+    int allc = forcompleterow (col, name);
+    comp_mid(arr, allc , col, rows, name);
+
+    storedmid(arr, rows, col, name);
+    
+
+    string txt="comp_mid.txt";
+    string headern="Median";
+    char choice;
+
+    cout << "\nDo you want to show analysed results in histogram form?" << endl;
+    do 
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y') 
+        histogram (txt,headern);
+
+}
+// PAVITHRA
+//Caller function for computation mean
+void readmean(int **arr,int rows ,int col,string name)
+{
+    int allc = forcompleterow (col, name);
+    comp_mean(arr, allc , col, rows, name);
+
+    storedmean(arr, rows, col, name);
+    
+
+    string txt="comp_mean.txt";
+    string headern="Mean";
+    char choice;
+
+    cout << "\nDo you want to show analysed results in histogram form?" << endl;
+    do 
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y') 
+        histogram (txt,headern);
+
+}
+// PAVITHRA
+//Caller function for computation variance
+void readvariance(int **arr,int rows, int col, string name)
+{
+    int allc = forcompleterow (col, name);
+    comp_var(arr, allc , col, rows, name);
+
+    storedvar(arr, rows, col, name);
+
+
+    string txt="comp_var.txt";
+    string headern="Variance";
+    char choice;
+
+    cout << "\nDo you want to show analysed results in histogram form?" << endl;
+    do 
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y') 
+        histogram (txt,headern);
+
+}
+// PAVITHRA
+//Caller function for computation stdv
+void readSTDV(int **arr,int rows,int col,string name)
+{
+    int allc = forcompleterow (col, name);
+    comp_stdv(arr, allc , col, rows, name);
+
+    storedstdv(arr, rows, col, name);
+
+    string txt="comp_stdv.txt";
+    string headern="Standard Deviation";
+    char choice;
+
+    cout << "\nDo you want to show analysed results in histogram form?" << endl;
+    do 
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y') 
+        histogram (txt,headern);
+
+}
+// PAVITHRA
+//Caller function for computation correlation
+void readcorreletion(int **arr,int rows,int col,string name)
+{
+
+    storedcorrelation(arr, rows, col, name);
+
+}
+
+// PAVITHRA
+//asking user want to continue ohter computation or not , if presses y the function will return 1 else presses n it will return 0
+bool continue_stat()
+{
+    char choice;
+    cout << "\nDo you want to try other statistical computation?" <<endl;
+    do
+    {
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+    
+
+    if (choice=='y')
+        return true;
+    else
+        return false;
+    
+}
+// PAVITHRA
+// print out menu for statistical computaion
+void ComputationMenu()
+{
+    system ("cls");
+
+    cout << "|_________________________________________________________________________|" << endl;
+    cout << "|        Please choose which Statistical Computation to display :         |" << endl;
+    cout << "|                1) Minimum                                               |" << endl;
+    cout << "|                2) Maximum                                               |" << endl;
+    cout << "|                3) Median                                                |" << endl;
+    cout << "|                4) Mean                                                  |" << endl;
+    cout << "|                5) Variance                                              |" << endl;
+    cout << "|                6) Standard Deviation                                    |" << endl;
+    cout << "|                7) Correlation between any selected 2 columns            |" << endl;
+    cout << "|                8) Back to main menu                                     |" << endl;
+    cout << "|_________________________________________________________________________|" << endl;
+}
+// PAVITHRA
+// read the transaction selected by user 
+void selectionoftransaction (int **arr, int rows, int col, string name)
+{
+    bool flag=1;
+    char statchosen;
+
+    while (flag==1)
+    {
+        ComputationMenu();
+        cin >> statchosen;
+        cin.ignore(80,'\n');
+
+        switch (statchosen)
+        {
+            //read from caller function readmin
+            case '1':   readmin(arr, rows, col, name);break;
+
+            //read from caller function readmax
+            case '2':   readmax(arr, rows, col, name);break;
+
+            //read from caller function readmedian        
+            case '3':   readmedian(arr, rows, col, name);break;
+
+            //read from caller function readmean        
+            case '4':   readmean(arr, rows, col, name);break;
+
+            //read from caller function readvariance        
+            case '5':   readvariance(arr, rows, col, name);break;
+
+            //read from caller function readSTDV        
+            case '6':   readSTDV(arr, rows, col, name);break;
+
+            //read from caller function readcorreletion        
+            case '7':   readcorreletion(arr, rows, col, name);break;
+                    
+            case '8':   return;
+
+            default :   cout << "Invalid Input. Please Input Again. " <<endl;break;
+        }
+        //after choosing the input it will continue to read from call function continue_stat
+        flag = continue_stat();
+        pause();
+    }
+
+}
+
+//-------------------------Report part--------------------------------------------------------
+
+//Estellyn Hoo Weay
+//Read the name which is input by user and save it as the file name
+string newfname()
+{
+    string newname;
+    cout << "\nPlease input the file name which you would like to save as(text file)" <<endl;
+    cin >> newname;
+    newname.append(".txt");
+    return newname;
+}
+
+
+//Estellyn Hoo Weay
+//let the data save into another of new text file which user can decide its name
+void Saveas(string txtname2)
+{
+    ofstream ofile;
+    ifstream in;
+    in.open(txtname2);
+    float x ;
+    string y,s,newname;
+    newname = newfname();
+    ofile.open(newname);
+    ofile << "+-------------------+--------------+------------+ " << endl;
+    ofile << setw(20) << left << "|Stat Name";
+    ofile << setw(15) << left << "|Titles";
+    ofile << setw(13) << left << "|Result" << "|" << endl;
+    ofile << "+-------------------+--------------+------------+ " << endl;
+
+
+    while (!in.eof())
+    {
+        in>>s >> y >> x;
+        ofile << "|";
+        ofile << setw(19) << left << s << "|";
+        ofile << setw(14) << left << y << "|";
+        ofile << setw(12) << left << x << "|" << endl;
+        ofile << "+-------------------+--------------+------------+ " << endl;
+    }
+
+    ofile.close();
+    in.close();
+
+
+}
+// Estellyn Hoo Weay
+// To generate report 
+void printreport (string txtname2)
+{
+    cout << "+-------------------+--------------+------------+ " << endl;
+    cout << setw(20) << left << "|Stat Name";
+    cout << setw(15) << left << "|Titles";
+    cout << setw(13) << left << "|Result" << "|" << endl;
+    cout << "+-------------------+--------------+------------+ " << endl;
+
+    ifstream in;
+    in.open(txtname2);
+    float x ;
+    string y,s; 
+
+    while (!in.eof())
+    {
+        in>>s >> y >> x;
+        cout << "|";
+        cout << setw(19) << left << s << "|";
+        cout << setw(14) << left << y << "|";
+        cout << setw(12) << left << x << "|" << endl;
+        cout << "+-------------------+--------------+------------+ " << endl;
+    }
+    in.close();
+}
+
+//Estellyn Hoo Weay
+//let the correlation data save into another of new text file which user can decide its name
+void CorrelationSaveas()
+{
+    ofstream ofile;
+    ifstream in;
+    in.open("rptcorrelation.txt");
+    float x ;
+    string s,y,t,newname;
+    newname = newfname();
+    ofile.open(newname);
+    ofile << "+--------------+------------------------+------------+ " << endl;
+    ofile << setw(15) << left << "|Stat Name";
+    ofile << setw(25) << left << "|Titles";
+    ofile << setw(13) << left << "|Result" << "|" << endl;
+    ofile << "+--------------+------------------------+------------+ " << endl;
+
+    while (!in.eof())
+    {
+        in >> s >> t >>y >> x;
+        ofile << "|";
+        ofile << setw(14) << left << s << "|";
+        ofile << setw(11) << left << t <<", "<< setw(11) << left << y << "|";
+        ofile << setw(12) << left << x << "|" << endl;
+        ofile << "+--------------+------------------------+------------+ " << endl;
+    }
+
+    ofile.close();
+    in.close();
+}
+
+//Estellyn Hoo Weay
+//To generate correlation report
+void printcorrelationrpt()
+{
+    ifstream in;
+    in.open("rptcorrelation.txt");
+    float x ;
+    string s,t1,t2;
+
+
+    cout << "+--------------+------------------------+------------+ " << endl;
+    cout << setw(15) << left << "|Stat Name";
+    cout << setw(25) << left << "|Titles";
+    cout << setw(13) << left << "|Result" << "|" << endl;
+    cout << "+--------------+------------------------+------------+ " << endl;
+
+    while (!in.eof())
+    {
+        in >> s >> t1 >> t2 >> x;
+        cout << "|";
+        cout << setw(14) << left << s << "|";
+        cout << setw(11) << left << t1 <<", "<< setw(11) << left << t2 << "|";
+        cout << setw(12) << left << x << "|" << endl;
+        cout << "+--------------+------------------------+------------+ " << endl;
+    }
+    in.close();
+}
+// PAVITHRA
+// check user want to continue or no, if user presses y function will return 1 else presses n , it will return 0
+bool checkingreport()
+{
+    char choice;
+    
+    do
+    {
+        cout << "\nDo you want to save other statistical computation report?" <<endl;
+        cout <<"Please enter "<< "\""<< "y" <<"\"" <<" for yes or enter "<< "\""<< "n" <<"\"" << " for no." <<endl;
+        cin >> choice;
+        cin.ignore(80,'\n');
+    } while (!(choice =='y' || choice =='n'));
+
+    if (choice == 'y')
+        return true;
+
+    else
+        return false;
+
+}
+// PAVITHRA
+// print a submenu for report
+void submenu()
+{
+    system ("cls");
+
+    cout << "|_________________________________________________________________________|" << endl;
+    cout << "|     Please choose which Statistical Computation report to display :     |" << endl;
+    cout << "|                1) Minimum                                               |" << endl;
+    cout << "|                2) Maximum                                               |" << endl;
+    cout << "|                3) Median                                                |" << endl;
+    cout << "|                4) Mean                                                  |" << endl;
+    cout << "|                5) Variance                                              |" << endl;
+    cout << "|                6) Standard Deviation                                    |" << endl;
+    cout << "|                7) Correlation between any selected 2 columns            |" << endl;
+    cout << "|                8) Back to report menu                                   |" << endl;
+    cout << "|_________________________________________________________________________|" << endl;
+}
+
+
+// PAVITHRA
+//when user chooses which computation, this function will detect which temporarily file 
+//is needed to be read for saved text report 
+//then print out report 
+void getrpt()
+{
+    bool flag=1;
+    string txtn2;
+    char ch;
+    while (flag==1)
+    {
+        submenu();
+        cin >> ch;
+        cin.ignore(80,'\n');
+        switch(ch)
+        {
+            //read the txt file (rptmin.txt) under void storedmin
+            case '1':   txtn2="rptmin.txt";         break;
+
+            //read the txt file (rptmax.txt) under void storedmax
+            case '2':   txtn2="rptmax.txt";         break;
+
+            //read the txt file (rptmedian.txt) under void storedmid
+            case '3':   txtn2="rptmid.txt";      break;
+
+            //read the txt file (rptmean.txt) under void storedmid
+            case '4':   txtn2="rptmean.txt";        break;
+
+            //read the txt file (rptvariance.txt) under void storedvar
+            case '5':   txtn2="rptvar.txt";    break;
+
+            //read the txt file (rptSTDV.txt) under void storedstdv
+            case '6':   txtn2="rptSTDV.txt";        break;
+
+            //call void CorrelationSaveas() 
+            case '7':   CorrelationSaveas();
+                        printcorrelationrpt();      break;
+
+            case '8':   pause();return;
+
+            default:    cout<< "Invalid Input" << endl; break;
+        }
+
+        if (ch == '1'||ch == '2'||ch == '3'||ch =='4'||ch =='5'||ch =='6')
+        {
+            Saveas(txtn2);
+            printreport (txtn2);
+        }
+
+        flag = checkingreport();
+        pause();
+    }
+}
+
+//------------------------------------------HTML part------------------------------------
+
+//Estellyn Hoo Weay
+//Read the name which is input by user and save it as file name
+string newhtmlfname()
+{
+    string htmlfname;
+    cout << "Please input the file name which you would like to save as(text file)" <<endl;
+    cin >> htmlfname;
+    htmlfname.append(".html");
+    return htmlfname;
+}
+
+//Estellyn Hoo Weay
+//let the data save into html document which user can decide its name
+void saveashtml(string txtname2)
+{
+    ofstream file;
+    ifstream in;
+    in.open(txtname2);
+    string y,s;
+    float x;
+    string htmlfilename = newhtmlfname();
+    file.open(htmlfilename);
+
+    file << "<html>" << endl;
+    file << "<body>" << endl;
+    file << "<h1>" << "</h1>" << endl;
+    file << "<style>"<< "table, th, td,caption {border: 1px solid black;border-collapse: collapse;font-size: 25px;}";
+    file << "tr:nth-child(even) {  background-color: #D6EEEE;}" << "</style>" << endl;
+    file << "<table style=\"width:60%\"> " << endl;
+    file << "<caption>Report</caption>" <<endl;
+    file << "<tr>" << "<th>Stat Name</th>" << "<th>Titles</th>" << "<th>Result</th>" << "</tr>" <<endl;
+
+    while (!in.eof())
+    {
+        in >> s >> y >> x;
+        file << "<tr>"; 
+        file << "<td>"<< s<<"</td>";
+        file <<"<td>"<< y << "</td>";
+        file << "<td>"<< x << "</td>";
+        file << "</tr>" << endl;
+    }
+    file << "</table>" << endl;
+    file << "</body>" << endl;
+    file << "</html>" << endl;
+    
+    file.close();
+    in.close();
+
+}
+
+//Estellyn Hoo Weay
+//let the correlation data save into html document which user can decide its name
+void saveashtmlcrltn()
+{
+    ofstream file;
+    ifstream in;
+    in.open("rptcorrelation.txt");
+    string t1,t2,s;
+    float x;
+    string htmlfilename = newhtmlfname();
+    file.open(htmlfilename);
+
+    file << "<html>" << endl;
+    file << "<body>" << endl;
+    file << "<h1>" << "</h1>" << endl;
+    file << "<style>"<< "table, th, td,caption {border: 1px solid black;border-collapse: collapse;font-size: 25px;}";
+    file << "tr:nth-child(even) {  background-color: #D6EEEE;}" << "</style>" << endl;
+    file << "<table style=\"width:60%\"> " << endl;
+    file << "<caption>Report</caption>" <<endl;
+    file << "<tr>" << "<th>Stat Name</th>" << "<th>Titles</th>" << "<th>Result</th>" << "</tr>" <<endl;
+
+    while (!in.eof())
+    {
+        in >> s >> t1>> t2 >> x;
+        file << "<tr>"; 
+        file << "<td>"<< s<<"</td>";
+        file <<"<td>"<< t1 << ", " << t2 << "</td>";
+        file << "<td>"<< x << "</td>";
+        file << "</tr>" << endl;
+    }
+    file << "</table>" << endl;
+    file << "</body>" << endl;
+    file << "</html>" << endl;
+    
+    file.close();
+    in.close();
+}
+
+
+// PAVITHRA
+//when user chooses which computation, this function will detect which temporarily file 
+//to be read for generated html report file
+void gethtmlrpt()
+{
+    bool flag=true;
+    string txtn2;
+    char ch;
+    while (flag==true)
+    {
+        submenu();
+        cin >> ch;
+        cin.ignore(80,'\n');
+        switch(ch)
+        {
+            //read the txt file (rptmin.txt) under void storedmin
+            case '1':   txtn2="rptmin.txt";         break;
+
+            //read the txt file (rptmax.txt) under void storedmax
+            case '2':   txtn2="rptmax.txt";         break;
+
+            //read the txt file (rptmid.txt) under void storedmid
+            case '3':   txtn2="rptmid.txt";         break;
+
+            //read the txt file (rptmean.txt) under void storedmean
+            case '4':   txtn2="rptmean.txt";        break;
+
+            //read the txt file (rptvar.txt) under void storedvar
+            case '5':   txtn2="rptvar.txt";         break;
+
+            //read the txt file (rptSTDV.txt) under void storedstdv
+            case '6':   txtn2="rptSTDV.txt";        break;
+
+            //will run under and save into html file in void saveashtmlcrltn() 
+            case '7':   saveashtmlcrltn();          break;
+
+            case '8':   system("pause");            return;
+
+            default:    cout<< "Invalid Input" << endl; break;
+        }
+
+        if (ch == '1'||ch == '2'||ch == '3'||ch =='4'||ch =='5'||ch =='6')
+        {
+            saveashtml(txtn2);
+        }
+
+        flag = checkingreport();
+        pause();
+    }
+
+}
+
+//// PAVITHRA
+// print out menu for report
+void ReportMenu()
+
+{
+    system("cls");
+
+    cout << "|______________________________________________________________________|" << endl;
+    cout << "|----------------------------------------------------------------------|" << endl;
+    cout << "|   R E P O R T  O F  S T A T I S T I C A L  C O M P U T A T I O N S   |" << endl;
+    cout << "|                                                                      |" << endl;
+    cout << "|                         1) TEXT REPORT                               |" << endl;
+    cout << "|                         2) HTML REPORT                               |" << endl;
+    cout << "|                         3) Back to main menu                         |" << endl;
+    cout << "|                                                                      |" << endl;
+    cout << "|----------------------------------------------------------------------|" << endl;
+    cout << "|______________________________________________________________________|" << endl;
+
+}
+// PAVITHRA
+// read the transaction selected by user 
+void selectionreport()
+{
+    char choice;
+
+    do
+    {
+        ReportMenu();
+        cout << "Please enter your choice" << endl;
+        cin  >> choice;
+        switch(choice)
+        {
+            case '1':getrpt();          break;
+
+            case '2':gethtmlrpt();      break;
+
+            case '3':pause();   return;
+
+            default: cout << "Invalid input. Please try again." << endl;    break;
+        }
+        pause();
+
+    }while (choice !='3');
+
+
+}
+
+//------------------------------------------------Main menu(user)--------------------
+
+// PAVITHRA
+// print out main menu for user with his/her name out at the center of top
+void menufunction(string username)
+{
+ 
+    system ("cls");
+
+    cout << "|________________________________________________________________________|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                              W E L C O M E                           *|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*";
+    cout << setw(38)<< username;
+    cout << setw(34)<<"*|"<<endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                                   T O                                *|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*            B A S I C  D A T A  A N A L Y S I S   P R O G R A M       *|" << endl;
+    cout << "|*                                                                      *|" << endl;
+    cout << "|*                                M E N U                               *|" << endl;
+    cout << "|________________________________________________________________________|" << endl;
+    cout << "|________________________________________________________________________|" << endl;
+    cout << "|                Please choose any of the option below:                  |" << endl;
+    cout << "|                1) Statistical Computation Menu                         |" << endl;
+    cout << "|                2) Report Menu                                          |" << endl;
+    cout << "|                3) Manage Account                                       |" << endl;
+    cout << "|                4) Quit                                                 |" << endl;
+    cout << "|________________________________________________________________________|" << endl;
+}
+
+// PAVITHRA
+// read the choice selected by user from main menu
+//this function cover function which releated by user
+void mainuser (string username)
+{
+    string name;
+    bool flag1=0;   
+    int **twoDarray,row,col;
+    
+    while (flag1 == 0)
+    {
+        name= loadfname(); 
+        flag1=getColRow(row, col, name);
+    }
+    if (flag1==1)
+    {
+        cout << "The file is loaded successfully." << endl;
+        pause();
+    }
+    twoDarray = allocateArray(row, col);
+    getData(twoDarray, row, col, name);
+
+    char choice;
+    int check = 0;
+
+    do
+    {
+        menufunction(username);
+        cin>> choice;
+        switch (choice)
+        {
+            case '1':   selectionoftransaction (twoDarray, row, col, name); check++;break;
+
+            case '2':   if (check != 0) selectionreport();
+                        else
+                            cout << "Please do the statistical computation first." << endl;break;
+
+            case '3':   changepass(username);break;
+
+            case '4':   freeArray(twoDarray,row);
+                        savelogout(username);return;
+
+            default:    cout << "Invalid Input.Please try again." << endl;break;
+        }
+
+        pause();
+        
+    } while (choice != '4');
+    
+}
+
+
+
+// PAVITHRA
+// if user choose 1 , the system will show user functions
+// else the system wiill show admin functions
+void useradmin (int option,string username)
+{
+    if (option == 1)
+        mainuser(username);
+
+    else
+        if (option == 2)
+            adminuser (username);
+}
+
+
+
+
+// Adrian Chong Keat Seong
+// Main function for this program
+int main () 
+{
+    
+    int option;
+    string username;
+
+    do 
+    {
+        system ("cls");
+        cout << "Welcome to Basic Data Analysis Program." << endl;
+        cout << "Please choose the option ( 1: User, 2: Admin, 3: Exit the program) : ";
+        cin >> option;
+        cin.ignore(80,'\n');
+        checkOption(option,username);
+        savelogin(username);
+        useradmin (option,username);
+        
+    } while (option != 3);
+
+    return 0;
+    
+}
 
